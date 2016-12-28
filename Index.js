@@ -21,9 +21,9 @@ app.use(bodyParser.urlencoded({
 }));
 
 var mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost/cats");
+mongoose.connect("mongodb://localhost/dogs");
 
-var cats = require("./routes/cats.js")(app);
+var cats = require("./routes/dogs.js")(app);
 
 app.get('/', function (req, res) {
     // res.send('Hellow from get');
