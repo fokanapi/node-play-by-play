@@ -31,10 +31,12 @@ module.exports = function (app) {
                         error: err
                     });
                 }
-                res.json({
-                    info: "successfully loaded dogs",
-                    data: dogs
-                });
+                setTimeout(function () {
+                    res.json({
+                        info: "successfully loaded dogs",
+                        data: dogs
+                    })
+                }, 7000);
             }
         );
     });
@@ -94,8 +96,8 @@ module.exports = function (app) {
         Dog.findByIdAndRemove(req.params.id, function (err, dog) {
             if (err) {
                 res.json({
-                info: 'error removing dog'
-            });
+                    info: 'error removing dog'
+                });
             }
             res.json({
                 info: 'dog removed successfully'

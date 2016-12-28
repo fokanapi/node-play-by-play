@@ -3,6 +3,8 @@ var r = require("request").defaults({
 });
 
 var async = require("async");
+var redis = require("redis");
+var client = redis.createClient(6379, '127.0.0.1');
 
 module.exports = function (app) {
     app.get(
@@ -10,21 +12,38 @@ module.exports = function (app) {
         function (req, res) {
             async.parallel({
                     dogs: function (callback) {
-                        r({
-                                uri: "http://localhost:3001/dog"
-                            },
-                            function (error, response, body) {
-                                if (error) {
-                                    callback({
-                                        service: 'dog',
-                                        error: error
+                        client.get("alldogs", function (error, cachedDogs) {
+                            if (error) {
+                                throw error;
+                            }
+                            if (cachedDogs) {
+                                callback(null, JSON.parse(cachedDogs));
+                            } else {
+                                r({
+                                        uri: "http://localhost:3001/dog"
+                                    },
+                                    function (error, response, body) {
+                                        if (error) {
+                                            callback({
+                                                service: 'dog',
+                                                error: error
+                                            });
+                                        } else if (!error && response.statusCode === 200) {
+                                            callback(null, body.data);
+                                            client.setex("alldogs", 10, JSON.stringify(body.data), function(error){
+                                                if(error){
+                                                    throw error;
+                                                }
+                                            });
+                                        } else {
+                                            callback(response.statusCode);
+                                        }
                                     });
-                                } else if (!error && response.statusCode === 200) {
-                                    callback(null, body);
-                                } else {
-                                    callback(response.statusCode);
-                                }
-                            });
+                            }
+                        });
+
+
+
                     },
                     cats: function (callback) {
                         r({
@@ -37,7 +56,7 @@ module.exports = function (app) {
                                         error: error
                                     });
                                 } else if (!error && response.statusCode === 200) {
-                                    callback(null, body);
+                                    callback(null, body.data);
                                 } else {
                                     callback(response.statusCode);
                                 }
